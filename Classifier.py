@@ -38,8 +38,8 @@ class Classifier:
         self.loss_func = nn.CrossEntropyLoss()
         self.optimizer = optim.SGD
 
-        if ANN_flag == 'FC_MLP':
-            self.model_name = 'FC_MLP'
+        if ANN_flag == 'MLP':
+            self.model_name = 'MLP'
             self.model_class = FC_MLP_Model(self.INPUT_SIZE)
         if ANN_flag == 'CNN':
             self.model_name = 'CNN'
@@ -78,18 +78,21 @@ class Classifier:
         correct_pred = (y_pred_tags == y_test).float()
         return torch.round(correct_pred.sum() / len(correct_pred)*100)
 
-    def train_model(self, save_path="ANN_MODELS", save_model=True):
+    def train_model(self, save_path="ANN_MODELS", save_model=False, save_name=None, epoch_per_save=10):
         model = self.model_class
         model.to(self.device)
 
         optimizer = self.optimizer(params=model.parameters(), lr=self.LEARNING_RATE, momentum=self.MOMENTUM)
 
         if save_model:
-            if self.model_name == "FC_MLP":
-                wandb.init(project='neuralnetworksproject-fc-mlp')
+            if self.model_name == "MLP":
+                wandb.init(project='NN-cw-MLP')
             if self.model_name == "CNN":
-                wandb.init(project='neuralnetworksproject-cnn')
+                wandb.init(project='NN-cw-CNN')
+            wandb.run.name = save_name
             wandb.watch(model)
+            if not os.path.isdir(save_path):
+                os.makedirs(save_path)
 
         accuracy_stats = {'train': [], 'val': []}
         loss_stats = {'train': [], 'val': []}
@@ -113,6 +116,12 @@ class Classifier:
 
                 train_epoch_loss += train_loss.item()
                 train_epoch_acc += train_acc.item()
+                if save_model and epoch % epoch_per_save == 0:
+                    torch.save({
+                        'epoch': epoch,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'loss': train_loss}, f"{save_path}/{save_name}_epoch{epoch}.pth")
             with torch.no_grad():
                 model.eval()
                 val_epoch_loss, val_epoch_acc = 0, 0
@@ -139,15 +148,20 @@ class Classifier:
                            'Train Acc': accuracy_stats['train'][-1], 'Val Acc': accuracy_stats['val'][-1]})
         print("Finished Training")
         if save_model:
-            if not os.path.isdir(save_path):
-                os.makedirs(save_path)
-            torch.save(model.state_dict(), f"{save_path}/{wandb.run.name}.pth")
+            torch.save({
+                'epoch': self.EPOCHS,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss_stats['train'][-1]}, f"{save_path}/{save_name}_epoch{self.EPOCHS}.pth")
 
-    def test_model(self, model_path):
+    def load_model(self, model_path):
+        checkpoint = torch.load(model_path)
         model = self.model_class
         model.to(self.device)
-        model.load_state_dict(torch.load(model_path))
-        self.model = model
+        model.load_state_dict(checkpoint['model_state_dict'])
+        return model
+
+    def test_model(self, model):
         y_pred, y_ground_truth = [], []
         with torch.no_grad():
             for X_test_batch, y_test_batch in self.testloader:
@@ -164,12 +178,11 @@ class FC_MLP_Model(nn.Module):
     def __init__(self, INPUT_SIZE):
         nn.Module.__init__(self)
 
-        LAYER_WIDTHS = [INPUT_SIZE, 360, 360, 360, len(classes)]
+        LAYER_WIDTHS = [INPUT_SIZE, 128, 128, 128, len(classes)]
 
         self.linear_layers = nn.ModuleList()
         for i in range(len(LAYER_WIDTHS) - 1):
             self.linear_layers.append(nn.Linear(LAYER_WIDTHS[i], LAYER_WIDTHS[i + 1]))
-
         self.activation = nn.ReLU()
 
     def forward(self, inputs):
@@ -200,10 +213,11 @@ class CNN_Model(nn.Module):
         return x
 
 if __name__ == "__main__":
-    ANN_flag = "CNN"
+    ANN_flag = "MLP"
     ann = Classifier(ANN_flag)
 
-    # ann.train_model(save_path=f"ANN_MODELS/{ANN_flag}", save_model=False)
+    save_name = "MLP_h-layer-width-128"
+    ann.train_model(save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_model=True, save_name=save_name, epoch_per_save=1)
 
-    # model_name = "silver-oath-1"
+    # model_name = "eternal-sound-2"
     # ann.test_model(model_path=f"ANN_MODELS/{ANN_flag}/{model_name}.pth")
