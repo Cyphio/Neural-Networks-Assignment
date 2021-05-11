@@ -1,0 +1,17 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Traceback (most recent call last):
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 223, in <module>
+    ann.train_model(save_model=True, save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_name=save_name, epoch_per_save=5)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 110, in train_model
+    train_loss = self.loss_func(y_train_pred, y_train_batch)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\loss.py", line 1047, in forward
+    return F.cross_entropy(input, target, weight=self.weight,
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\functional.py", line 2693, in cross_entropy
+    return nll_loss(log_softmax(input, 1), target, weight, None, ignore_index, None, reduction)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\functional.py", line 2384, in nll_loss
+    raise ValueError(
+ValueError: Expected input batch_size (128) to match target batch_size (32).

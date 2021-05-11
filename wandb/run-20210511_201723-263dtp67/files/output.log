@@ -1,0 +1,13 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Traceback (most recent call last):
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 223, in <module>
+    ann.train_model(save_model=True, save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_name=save_name, epoch_per_save=5)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 107, in train_model
+    y_train_pred = model(X_train_batch)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 216, in forward
+    return self.activation(self.fc_out(x.view(-1, self.fc_in_size)))
+RuntimeError: shape '[-1, 245]' is invalid for input of size 1440

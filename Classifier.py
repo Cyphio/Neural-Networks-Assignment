@@ -19,7 +19,7 @@ import random
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 class Classifier:
-    def __init__(self, ANN_flag):
+    def __init__(self, TRAIN_VAL_SPLIT, EPOCHS, BATCH_SIZE, LEARNING_RATE, loss_func, optimizer):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"RUNNING ON: {self.device}")
 
@@ -27,25 +27,13 @@ class Classifier:
         np.random.seed(101)
         random.seed(101)
 
-        # ANN hyper-parameters
-        self.TRAIN_VAL_SPLIT = 0.4
-        self.EPOCHS = 15
-        self.BATCH_SIZE = 32
-        self.LEARNING_RATE = 0.0001
-        # For SGD
-        self.MOMENTUM = 0.9
-
-        self.loss_func = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam
-
-        if ANN_flag == 'MLP':
-            self.INPUT_SIZE = 32 * 32 * 3
-            self.model_name = 'MLP'
-            self.model_class = MLP_Model(self.INPUT_SIZE)
-        if ANN_flag == 'CNN':
-            self.INPUT_SIZE = 32 * 32
-            self.model_name = 'CNN'
-            self.model_class = CNN_Model()
+        # Train Hyper-parameters
+        self.TRAIN_VAL_SPLIT = TRAIN_VAL_SPLIT
+        self.EPOCHS = EPOCHS
+        self.BATCH_SIZE = BATCH_SIZE
+        self.LEARNING_RATE = LEARNING_RATE
+        self.loss_func = loss_func
+        self.optimizer = optimizer
 
         # Preprocess transforms
         self.transform = transforms.Compose([transforms.ToTensor(),
@@ -80,9 +68,10 @@ class Classifier:
         correct_pred = (y_pred_tags == y_test).float()
         return torch.round(correct_pred.sum() / len(correct_pred)*100)
 
-    def train_model(self, save_model=False, save_path="ANN_MODELS", save_name=None, epoch_per_save=10):
-        model = self.model_class
+    def train_model(self, conv_filters, kernel_size, activation, pool, drop_out, save_model=False, save_path="ANN_MODELS", save_name=None, epoch_per_save=10):
+        model = CNN_Model(conv_filters, kernel_size, activation, pool, drop_out)
         model.to(self.device)
+        print(model)
 
         optimizer = self.optimizer(params=model.parameters(), lr=self.LEARNING_RATE)
 
@@ -173,54 +162,54 @@ class Classifier:
                 y_ground_truth.append(y_test_batch.cpu().numpy())
         print(classification_report(y_ground_truth, y_pred, zero_division=0))
 
-class MLP_Model(nn.Module):
-    def __init__(self, INPUT_SIZE):
-        nn.Module.__init__(self)
-
-        LAYER_WIDTHS = [INPUT_SIZE, 64, 64, 64, len(classes)]
-
-        self.linear_layers = nn.ModuleList()
-        for i in range(len(LAYER_WIDTHS) - 1):
-            self.linear_layers.append(nn.Linear(LAYER_WIDTHS[i], LAYER_WIDTHS[i + 1]))
-        self.activation = nn.ReLU()
-
-    def forward(self, inputs):
-        x = inputs.view(inputs.size(0), -1)
-        for i in range(len(self.linear_layers)):
-            x = self.activation(self.linear_layers[i](x))
-        return x
-
 class CNN_Model(nn.Module):
-    def __init__(self):
+    def __init__(self, conv_filters, kernel_size, activation, pool, drop_out=0):
         nn.Module.__init__(self)
-
-        INPUT_FILTER = 3
-        CONV_FILTERS = [INPUT_FILTER, 3, 3, 3, len(classes)]
-        kernel_size = (5, 5)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.conv_layers = nn.ModuleList()
-        for i in range(len(CONV_FILTERS) - 2):
-            self.conv_layers.append(nn.Conv2d(CONV_FILTERS[i], CONV_FILTERS[i + 1], kernel_size))
-        self.fc_in_size = CONV_FILTERS[-2] * kernel_size[0] * kernel_size[1]
-        print(self.fc_in_size)
-        self.fc_out = nn.Linear(self.fc_in_size, CONV_FILTERS[-1])
+        self.conv_layers.append(nn.Conv2d(3, conv_filters[0], kernel_size))
+        for i in range(len(conv_filters)-1):
+            self.conv_layers.append(nn.Conv2d(conv_filters[i], conv_filters[i + 1], kernel_size))
+        self.fc_in_size = conv_filters[-1]*kernel_size[0]*len(conv_filters)
+        self.fc_out = nn.Linear(self.fc_in_size, len(classes))
 
-        self.activation = nn.ReLU()
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.activation = activation
+        self.pool = pool
+        self.drop_out = drop_out
 
     def forward(self, inputs):
         x = inputs
-        for i in range(len(self.conv_layers)-1):
-            # x = self.activation(self.conv_layers[i](x))
-            x = self.pool(self.activation(self.conv_layers[i](x)))
-        return self.activation(self.fc_out(x.view(-1, self.fc_in_size)))
+        for i in range(len(self.conv_layers)):
+            x = self.activation(self.conv_layers[i](x))
+            x = nn.Dropout(self.drop_out)(x)
+            print(x.shape)
+        x = torch.flatten(x, 1)
+        # x = self.activation(self.conv_layers[-1](x))
+        # return self.fc_out(x.view(-1, self.fc_in_size))
+        return self.fc_out(x.view(x.size()[0], -1))
 
 if __name__ == "__main__":
-    ANN_flag = "CNN"
-    ann = Classifier(ANN_flag)
+    # Standard Hyper-parameters
+    TRAIN_VAL_SPLIT = 0.4
+    EPOCHS = 15
+    BATCH_SIZE = 32
+    loss_func = nn.CrossEntropyLoss()
+    optimizer = optim.Adam
 
-    save_name = "CNN_filter-size-3"
-    ann.train_model(save_model=True, save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_name=save_name, epoch_per_save=5)
+    # Changeable Params
+    LEARNING_RATE = 0.0001
+    conv_filters = [32, 64, 64]
+    kernel_size = (5, 5)
+    activation = nn.ReLU()
+    pool = nn.MaxPool2d(kernel_size=2, stride=2)
+    drop_out = 0
+
+    ann = Classifier(TRAIN_VAL_SPLIT, EPOCHS, BATCH_SIZE, LEARNING_RATE, loss_func, optimizer)
+
+    save_name = "standard"
+    ann.train_model(conv_filters, kernel_size, activation, pool, drop_out,
+                    save_model=False, save_path=f"ANN_MODELS/{save_name}", save_name=save_name, epoch_per_save=5)
 
     # model_path = "ANN_MODELS/MLP/MLP_h-layer-width-64/MLP_h-layer-width-64_epoch15.pth"
     # model = ann.load_model(model_path)

@@ -1,0 +1,24 @@
+{
+    "os": "Windows-10-10.0.19041-SP0",
+    "python": "3.8.8",
+    "heartbeatAt": "2021-05-11T19:16:12.134296",
+    "startedAt": "2021-05-11T19:16:06.604023",
+    "docker": null,
+    "gpu": "GeForce GTX 1070 Ti",
+    "gpu_count": 1,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py",
+    "codePath": "Classifier.py",
+    "git": {
+        "remote": "https://github.com/Cyphio/Neural-Networks-Assignment.git",
+        "commit": "02a60cab8b5f13e3a6929dffbccab94acd4299b5"
+    },
+    "email": "Harry@mbr-online.co.uk",
+    "root": "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment",
+    "host": "Harry-Desktop",
+    "username": "harry",
+    "executable": "C:\\Users\\harry\\Anaconda3\\envs\\ML38\\python.exe"
+}
