@@ -1,0 +1,13 @@
+Beginning training
+Traceback (most recent call last):
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 221, in <module>
+    ann.train_model(save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_model=True, save_name=save_name, epoch_per_save=5)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 106, in train_model
+    y_train_pred = model(X_train_batch)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 211, in forward
+    for i in range(len(self.CONV_FILTERS)):
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 947, in __getattr__
+    raise AttributeError("'{}' object has no attribute '{}'".format(
+AttributeError: 'CNN_Model' object has no attribute 'CONV_FILTERS'

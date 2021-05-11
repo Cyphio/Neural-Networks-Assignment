@@ -1,0 +1,46 @@
+2021-05-11 01:47:51,741 INFO    MainThread:22500 [wandb_setup.py:_flush():69] setting env: {}
+2021-05-11 01:47:51,741 INFO    MainThread:22500 [wandb_setup.py:_flush():69] setting login settings: {}
+2021-05-11 01:47:51,741 INFO    MainThread:22500 [wandb_init.py:_log_setup():336] Logging user logs to C:\Users\harry\PycharmProjects\Neural-Networks-Assignment\wandb\run-20210511_014751-3675o9b7\logs\debug.log
+2021-05-11 01:47:51,741 INFO    MainThread:22500 [wandb_init.py:_log_setup():337] Logging internal logs to C:\Users\harry\PycharmProjects\Neural-Networks-Assignment\wandb\run-20210511_014751-3675o9b7\logs\debug-internal.log
+2021-05-11 01:47:51,742 INFO    MainThread:22500 [wandb_init.py:init():369] calling init triggers
+2021-05-11 01:47:51,742 INFO    MainThread:22500 [wandb_init.py:init():374] wandb.init called with sweep_config: {}
+config: {}
+2021-05-11 01:47:51,743 INFO    MainThread:22500 [wandb_init.py:init():418] starting backend
+2021-05-11 01:47:51,743 INFO    MainThread:22500 [backend.py:_multiprocessing_setup():69] multiprocessing start_methods=spawn, using: spawn
+2021-05-11 01:47:51,747 INFO    MainThread:22500 [backend.py:ensure_launched():123] starting backend process...
+2021-05-11 01:47:52,078 INFO    MainThread:22500 [backend.py:ensure_launched():127] started backend process with pid: 4440
+2021-05-11 01:47:52,079 INFO    MainThread:22500 [wandb_init.py:init():423] backend started and connected
+2021-05-11 01:47:52,083 INFO    MainThread:22500 [wandb_init.py:init():463] updated telemetry
+2021-05-11 01:47:52,084 INFO    MainThread:22500 [wandb_init.py:init():482] communicating current version
+2021-05-11 01:47:53,179 INFO    MainThread:22500 [wandb_init.py:init():487] got version response upgrade_message: "wandb version 0.10.30 is available!  To upgrade, please run:\n $ pip install wandb --upgrade"
+
+2021-05-11 01:47:53,179 INFO    MainThread:22500 [wandb_init.py:init():495] communicating run to backend with 30 second timeout
+2021-05-11 01:47:53,558 INFO    MainThread:22500 [wandb_init.py:init():520] starting run threads in backend
+2021-05-11 01:47:58,232 INFO    MainThread:22500 [wandb_run.py:_console_start():1507] atexit reg
+2021-05-11 01:47:58,234 INFO    MainThread:22500 [wandb_run.py:_redirect():1370] redirect: SettingsConsole.WRAP
+2021-05-11 01:47:58,234 INFO    MainThread:22500 [wandb_run.py:_redirect():1405] Wrapping output streams.
+2021-05-11 01:47:58,234 INFO    MainThread:22500 [wandb_run.py:_redirect():1421] Redirects installed.
+2021-05-11 01:47:58,234 INFO    MainThread:22500 [wandb_init.py:init():544] run started, returning control to user process
+2021-05-11 01:47:58,234 INFO    MainThread:22500 [wandb_watch.py:watch():39] Watching
+2021-05-11 01:47:58,412 INFO    MainThread:22500 [wandb_run.py:_atexit_cleanup():1477] got exitcode: 1
+2021-05-11 01:47:58,412 INFO    MainThread:22500 [wandb_run.py:_restore():1449] restore
+2021-05-11 01:47:59,186 INFO    MainThread:22500 [wandb_run.py:_wait_for_finish():1599] got exit ret: file_counts {
+  wandb_count: 1
+}
+pusher_stats {
+  uploaded_bytes: 859
+  total_bytes: 859
+}
+
+2021-05-11 01:48:01,203 INFO    MainThread:22500 [wandb_run.py:_wait_for_finish():1599] got exit ret: done: true
+exit_result {
+}
+file_counts {
+  wandb_count: 5
+}
+pusher_stats {
+  uploaded_bytes: 4260
+  total_bytes: 4260
+}
+
+2021-05-11 01:48:02,765 INFO    MainThread:22500 [wandb_run.py:_show_files():1821] logging synced files

@@ -1,0 +1,9 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Epoch 01: | Train Loss: 2.29378 | Val Loss: 2.26401 | Train Acc: 12.435 | Val Acc: 19.235
+Epoch 02: | Train Loss: 2.11103 | Val Loss: 1.96099 | Train Acc: 24.186 | Val Acc: 29.698
+Epoch 03: | Train Loss: 1.88559 | Val Loss: 1.79273 | Train Acc: 31.771 | Val Acc: 34.806
+Epoch 04: | Train Loss: 1.70928 | Val Loss: 1.62955 | Train Acc: 38.281 | Val Acc: 39.826
+Epoch 05: | Train Loss: 1.58193 | Val Loss: 1.54489 | Train Acc: 42.766 | Val Acc: 44.538
+Finished Training

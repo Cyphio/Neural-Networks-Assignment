@@ -28,20 +28,22 @@ class Classifier:
         random.seed(101)
 
         # ANN hyper-parameters
-        self.INPUT_SIZE = 1024
         self.TRAIN_VAL_SPLIT = 0.4
-        self.EPOCHS = 50
+        self.EPOCHS = 15
         self.BATCH_SIZE = 32
-        self.LEARNING_RATE = 0.001
+        self.LEARNING_RATE = 0.0001
+        # For SGD
         self.MOMENTUM = 0.9
 
         self.loss_func = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD
+        self.optimizer = optim.Adam
 
         if ANN_flag == 'MLP':
+            self.INPUT_SIZE = 32 * 32 * 3
             self.model_name = 'MLP'
-            self.model_class = FC_MLP_Model(self.INPUT_SIZE)
+            self.model_class = MLP_Model(self.INPUT_SIZE)
         if ANN_flag == 'CNN':
+            self.INPUT_SIZE = 32 * 32
             self.model_name = 'CNN'
             self.model_class = CNN_Model()
 
@@ -78,17 +80,14 @@ class Classifier:
         correct_pred = (y_pred_tags == y_test).float()
         return torch.round(correct_pred.sum() / len(correct_pred)*100)
 
-    def train_model(self, save_path="ANN_MODELS", save_model=False, save_name=None, epoch_per_save=10):
+    def train_model(self, save_model=False, save_path="ANN_MODELS", save_name=None, epoch_per_save=10):
         model = self.model_class
         model.to(self.device)
 
-        optimizer = self.optimizer(params=model.parameters(), lr=self.LEARNING_RATE, momentum=self.MOMENTUM)
+        optimizer = self.optimizer(params=model.parameters(), lr=self.LEARNING_RATE)
 
         if save_model:
-            if self.model_name == "MLP":
-                wandb.init(project='NN-cw-MLP')
-            if self.model_name == "CNN":
-                wandb.init(project='NN-cw-CNN')
+            wandb.init(project='nn-cw')
             wandb.run.name = save_name
             wandb.watch(model)
             if not os.path.isdir(save_path):
@@ -121,7 +120,7 @@ class Classifier:
                         'epoch': epoch,
                         'model_state_dict': model.state_dict(),
                         'optimizer_state_dict': optimizer.state_dict(),
-                        'loss': train_loss}, f"{save_path}/{save_name}_epoch{epoch}.pth")
+                        'loss': train_loss, 'acc': train_acc}, f"{save_path}/{save_name}_epoch{epoch}.pth")
             with torch.no_grad():
                 model.eval()
                 val_epoch_loss, val_epoch_acc = 0, 0
@@ -152,7 +151,7 @@ class Classifier:
                 'epoch': self.EPOCHS,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss_stats['train'][-1]}, f"{save_path}/{save_name}_epoch{self.EPOCHS}.pth")
+                'loss': loss_stats['train'][-1], 'acc': accuracy_stats['train'][-1]}, f"{save_path}/{save_name}_epoch{self.EPOCHS}.pth")
 
     def load_model(self, model_path):
         checkpoint = torch.load(model_path)
@@ -174,11 +173,11 @@ class Classifier:
                 y_ground_truth.append(y_test_batch.cpu().numpy())
         print(classification_report(y_ground_truth, y_pred, zero_division=0))
 
-class FC_MLP_Model(nn.Module):
+class MLP_Model(nn.Module):
     def __init__(self, INPUT_SIZE):
         nn.Module.__init__(self)
 
-        LAYER_WIDTHS = [INPUT_SIZE, 128, 128, 128, len(classes)]
+        LAYER_WIDTHS = [INPUT_SIZE, 64, 64, 64, len(classes)]
 
         self.linear_layers = nn.ModuleList()
         for i in range(len(LAYER_WIDTHS) - 1):
@@ -194,30 +193,35 @@ class FC_MLP_Model(nn.Module):
 class CNN_Model(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=(5, 5))
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=(5, 5))
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+
+        INPUT_FILTER = 3
+        CONV_FILTERS = [INPUT_FILTER, 3, 3, 3, len(classes)]
+        kernel_size = (5, 5)
+
+        self.conv_layers = nn.ModuleList()
+        for i in range(len(CONV_FILTERS) - 2):
+            self.conv_layers.append(nn.Conv2d(CONV_FILTERS[i], CONV_FILTERS[i + 1], kernel_size))
+        self.fc_in_size = CONV_FILTERS[-2] * kernel_size[0] * kernel_size[1]
+        print(self.fc_in_size)
+        self.fc_out = nn.Linear(self.fc_in_size, CONV_FILTERS[-1])
 
         self.activation = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, inputs):
-        x = self.pool(self.activation(self.conv1(inputs)))
-        x = self.pool(self.activation(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = self.activation(self.fc1(x))
-        x = self.activation(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        x = inputs
+        for i in range(len(self.conv_layers)-1):
+            # x = self.activation(self.conv_layers[i](x))
+            x = self.pool(self.activation(self.conv_layers[i](x)))
+        return self.activation(self.fc_out(x.view(-1, self.fc_in_size)))
 
 if __name__ == "__main__":
-    ANN_flag = "MLP"
+    ANN_flag = "CNN"
     ann = Classifier(ANN_flag)
 
-    save_name = "MLP_h-layer-width-128"
-    ann.train_model(save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_model=True, save_name=save_name, epoch_per_save=1)
+    save_name = "CNN_filter-size-3"
+    ann.train_model(save_model=True, save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_name=save_name, epoch_per_save=5)
 
-    # model_name = "eternal-sound-2"
-    # ann.test_model(model_path=f"ANN_MODELS/{ANN_flag}/{model_name}.pth")
+    # model_path = "ANN_MODELS/MLP/MLP_h-layer-width-64/MLP_h-layer-width-64_epoch15.pth"
+    # model = ann.load_model(model_path)
+    # ann.test_model(model)

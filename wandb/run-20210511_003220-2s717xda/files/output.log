@@ -1,0 +1,15 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Traceback (most recent call last):
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 221, in <module>
+    ann.train_model(save_path=f"ANN_MODELS/{ANN_flag}/{save_name}", save_model=True, save_name=save_name, epoch_per_save=5)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 121, in train_model
+    torch.save({
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\serialization.py", line 369, in save
+    with _open_file_like(f, 'wb') as opened_file:
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+OSError: [Errno 22] Invalid argument: 'ANN_MODELS/MLP/MLP_h-layer-width-256/MLP_h-layer-width-256_epoch0.pth'
