@@ -15,13 +15,18 @@ from sklearn.model_selection import train_test_split
 import wandb
 import os
 import random
+import functools
+import operator
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
+
 class Classifier:
-    def __init__(self, TRAIN_VAL_SPLIT, EPOCHS, BATCH_SIZE, LEARNING_RATE, loss_func, optimizer):
+    def __init__(self, data, TRAIN_VAL_SPLIT, EPOCHS, BATCH_SIZE, LEARNING_RATE, loss_func, optimizer):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"RUNNING ON: {self.device}")
+
+        self.data = data
 
         # Seeds
         np.random.seed(101)
@@ -36,8 +41,14 @@ class Classifier:
         self.optimizer = optimizer
 
         # Preprocess transforms
-        self.transform = transforms.Compose([transforms.ToTensor(),
-                                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        self.transform_data_augmentation = transforms.Compose([transforms.RandomCrop(32, padding=4),
+                                                               transforms.RandomHorizontalFlip(),
+                                                               transforms.ToTensor(),
+                                                               transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                                                    (0.2023, 0.1994, 0.2010)), ])
+
+        self.transform_normal = transforms.Compose([transforms.ToTensor(),
+                                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         # Data loading
         dataloaders = self.get_dataloaders()
@@ -52,24 +63,36 @@ class Classifier:
         plt.show()
 
     def get_dataloaders(self):
-        train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=self.transform)
-        test_dataset = datasets.CIFAR10(root='./data', train=False, download=True, transform=self.transform)
+        test_dataset = datasets.CIFAR10(root=f'./{self.data}', train=False, download=True,
+                                        transform=self.transform_normal)
+        if self.data == "data_with_transforms":
+            train_dataset = datasets.CIFAR10(root=f'./{self.data}', train=True, download=True,
+                                             transform=self.transform_data_augmentation)
+            print("Using augmented train data")
+        else:
+            train_dataset = datasets.CIFAR10(root=f'./{self.data}', train=True, download=True,
+                                             transform=self.transform_normal)
+            print("Using normal train data")
 
         train_dataset_indices = list(range(len(train_dataset)))
         np.random.shuffle(train_dataset_indices)
-        train_sampler = SubsetRandomSampler(train_dataset_indices[int(np.floor(self.TRAIN_VAL_SPLIT * len(train_dataset))):])
-        val_sampler = SubsetRandomSampler(train_dataset_indices[:int(np.floor(self.TRAIN_VAL_SPLIT * len(train_dataset)))])
-        return {"TRAIN": DataLoader(train_dataset, batch_size=self.BATCH_SIZE, sampler=train_sampler, drop_last=True),
-                "VAL": DataLoader(train_dataset, batch_size=self.BATCH_SIZE, sampler=val_sampler, drop_last=True),
+        train_sampler = SubsetRandomSampler(
+            train_dataset_indices[int(np.floor(self.TRAIN_VAL_SPLIT * len(train_dataset))):])
+        val_sampler = SubsetRandomSampler(
+            train_dataset_indices[:int(np.floor(self.TRAIN_VAL_SPLIT * len(train_dataset)))])
+        return {"TRAIN": DataLoader(train_dataset, batch_size=self.BATCH_SIZE, sampler=train_sampler,
+                                    drop_last=True),
+                "VAL": DataLoader(train_dataset, batch_size=self.BATCH_SIZE, sampler=val_sampler,
+                                  drop_last=True),
                 "TEST": DataLoader(test_dataset, batch_size=1)}
 
     def multi_acc(self, y_pred, y_test):
         _, y_pred_tags = torch.max(torch.log_softmax(y_pred, dim=1), dim=1)
         correct_pred = (y_pred_tags == y_test).float()
-        return torch.round(correct_pred.sum() / len(correct_pred)*100)
+        return torch.round(correct_pred.sum() / len(correct_pred) * 100)
 
-    def train_model(self, conv_filters, kernel_size, activation, pool, drop_out, save_model=False, save_path="ANN_MODELS", save_name=None, epoch_per_save=10):
-        model = CNN_Model(conv_filters, kernel_size, activation, pool, drop_out)
+    def train_model(self, train_params, save_model=False, save_path="ANN_MODELS", save_name=None, epoch_per_save=10):
+        model = CNN_Model(train_params)
         model.to(self.device)
         print(model)
 
@@ -129,8 +152,9 @@ class Classifier:
             accuracy_stats['train'].append(train_epoch_acc / len(self.trainloader))
             accuracy_stats['val'].append(val_epoch_acc / len(self.valloader))
 
-            print(f"Epoch {(epoch+1)+0:02}: | Train Loss: {loss_stats['train'][-1]:.5f} | Val Loss: {loss_stats['val'][-1]:.5f} | "
-                  f"Train Acc: {accuracy_stats['train'][-1]:.3f} | Val Acc: {accuracy_stats['val'][-1]:.3f}")
+            print(
+                f"Epoch {(epoch + 1) + 0:02}: | Train Loss: {loss_stats['train'][-1]:.5f} | Val Loss: {loss_stats['val'][-1]:.5f} | "
+                f"Train Acc: {accuracy_stats['train'][-1]:.3f} | Val Acc: {accuracy_stats['val'][-1]:.3f}")
             if save_model:
                 wandb.log({'Train Loss': loss_stats['train'][-1], 'Val Loss': loss_stats['val'][-1],
                            'Train Acc': accuracy_stats['train'][-1], 'Val Acc': accuracy_stats['val'][-1]})
@@ -140,7 +164,8 @@ class Classifier:
                 'epoch': self.EPOCHS,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss_stats['train'][-1], 'acc': accuracy_stats['train'][-1]}, f"{save_path}/{save_name}_epoch{self.EPOCHS}.pth")
+                'loss': loss_stats['train'][-1], 'acc': accuracy_stats['train'][-1]},
+                f"{save_path}/{save_name}_epoch{self.EPOCHS}.pth")
 
     def load_model(self, model_path):
         checkpoint = torch.load(model_path)
@@ -162,54 +187,65 @@ class Classifier:
                 y_ground_truth.append(y_test_batch.cpu().numpy())
         print(classification_report(y_ground_truth, y_pred, zero_division=0))
 
+
 class CNN_Model(nn.Module):
-    def __init__(self, conv_filters, kernel_size, activation, pool, drop_out=0):
+    def __init__(self, params):
         nn.Module.__init__(self)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.conv_layers = nn.ModuleList()
-        self.conv_layers.append(nn.Conv2d(3, conv_filters[0], kernel_size))
-        for i in range(len(conv_filters)-1):
-            self.conv_layers.append(nn.Conv2d(conv_filters[i], conv_filters[i + 1], kernel_size))
-        self.fc_in_size = conv_filters[-1]*kernel_size[0]*len(conv_filters)
-        self.fc_out = nn.Linear(self.fc_in_size, len(classes))
+        conv_filters = params.get("conv_filters")
+        self.conv_layer = nn.ModuleList()
+        for i in range(len(conv_filters) - 1):
+            self.conv_layer.append(
+                nn.Conv2d(in_channels=conv_filters[i], out_channels=conv_filters[i + 1],
+                          kernel_size=params.get("kernel_size"), padding=params.get("padding")))
+            if params.get("batch_norm") and i % 2 == 0:
+                self.conv_layer.append(nn.BatchNorm2d(conv_filters[i + 1]))
+            self.conv_layer.append(params.get("activation"))
+            if (i + 1) % 2 == 0:
+                self.conv_layer.append(params.get("pool"))
+        self.conv_layer.append(nn.Flatten())
 
-        self.activation = activation
-        self.pool = pool
-        self.drop_out = drop_out
+        self.drop_out = nn.Dropout(params.get("drop_out"))
+
+        # Need to hard code the num of in_channels for fully connected final layer
+        self.fc_out = nn.Linear(8192, len(classes))
 
     def forward(self, inputs):
         x = inputs
-        for i in range(len(self.conv_layers)):
-            x = self.activation(self.conv_layers[i](x))
-            x = nn.Dropout(self.drop_out)(x)
-            print(x.shape)
-        x = torch.flatten(x, 1)
-        # x = self.activation(self.conv_layers[-1](x))
-        # return self.fc_out(x.view(-1, self.fc_in_size))
-        return self.fc_out(x.view(x.size()[0], -1))
+        for i in range(len(self.conv_layer)):
+            x = self.conv_layer[i](x)
+        # Use below to find the num of in_channels for fully connected final layer
+        # print(x.shape[-1])
+        return self.fc_out(self.drop_out(x))
+
 
 if __name__ == "__main__":
+    data = "data_without_transforms"
+
     # Standard Hyper-parameters
-    TRAIN_VAL_SPLIT = 0.4
-    EPOCHS = 15
-    BATCH_SIZE = 32
+    train_val_split = 0.4
+    epochs = 15
+    epochs_per_save = 5
+    batch_size = 128
     loss_func = nn.CrossEntropyLoss()
     optimizer = optim.Adam
 
     # Changeable Params
-    LEARNING_RATE = 0.0001
-    conv_filters = [32, 64, 64]
-    kernel_size = (5, 5)
-    activation = nn.ReLU()
-    pool = nn.MaxPool2d(kernel_size=2, stride=2)
-    drop_out = 0
+    params = {"learning_rate": 0.001,
+              "conv_filters": [3, 32, 64, 128],
+              "kernel_size": 5,
+              "padding": 0,
+              "batch_norm": False,
+              "activation": nn.ReLU(inplace=True),
+              "pool": nn.MaxPool2d(kernel_size=2, stride=2),
+              "drop_out": 0.5}
 
-    ann = Classifier(TRAIN_VAL_SPLIT, EPOCHS, BATCH_SIZE, LEARNING_RATE, loss_func, optimizer)
+    ann = Classifier(data, train_val_split, epochs, batch_size, params.get("learning_rate"), loss_func, optimizer)
 
-    save_name = "standard"
-    ann.train_model(conv_filters, kernel_size, activation, pool, drop_out,
-                    save_model=False, save_path=f"ANN_MODELS/{save_name}", save_name=save_name, epoch_per_save=5)
+    save_name = "batch-size-128"
+    ann.train_model(params, save_model=True, save_path=f"ANN_MODELS/{save_name}",
+                    save_name=save_name, epoch_per_save=epochs_per_save)
 
     # model_path = "ANN_MODELS/MLP/MLP_h-layer-width-64/MLP_h-layer-width-64_epoch15.pth"
     # model = ann.load_model(model_path)

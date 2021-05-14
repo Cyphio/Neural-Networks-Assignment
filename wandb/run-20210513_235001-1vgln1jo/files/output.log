@@ -1,0 +1,19 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Epoch 01: | Train Loss: 1.60111 | Val Loss: 1.29613 | Train Acc: 45.252 | Val Acc: 53.987
+Epoch 02: | Train Loss: 1.16896 | Val Loss: 1.10450 | Train Acc: 59.628 | Val Acc: 61.654
+Epoch 03: | Train Loss: 0.97898 | Val Loss: 0.92245 | Train Acc: 65.829 | Val Acc: 67.679
+Epoch 04: | Train Loss: 0.85740 | Val Loss: 0.87906 | Train Acc: 70.056 | Val Acc: 69.654
+Epoch 05: | Train Loss: 0.76608 | Val Loss: 0.89788 | Train Acc: 73.346 | Val Acc: 69.090
+Epoch 06: | Train Loss: 0.69273 | Val Loss: 0.90876 | Train Acc: 75.912 | Val Acc: 70.179
+Epoch 07: | Train Loss: 0.62472 | Val Loss: 0.81821 | Train Acc: 78.081 | Val Acc: 72.532
+Epoch 08: | Train Loss: 0.56721 | Val Loss: 0.88144 | Train Acc: 80.090 | Val Acc: 71.295
+Epoch 09: | Train Loss: 0.51767 | Val Loss: 0.81598 | Train Acc: 81.778 | Val Acc: 72.343
+Epoch 10: | Train Loss: 0.48284 | Val Loss: 0.87297 | Train Acc: 83.115 | Val Acc: 72.029
+Epoch 11: | Train Loss: 0.43590 | Val Loss: 0.81156 | Train Acc: 84.558 | Val Acc: 73.590
+Epoch 12: | Train Loss: 0.40022 | Val Loss: 0.87014 | Train Acc: 85.786 | Val Acc: 72.779
+Epoch 13: | Train Loss: 0.37505 | Val Loss: 0.83136 | Train Acc: 87.013 | Val Acc: 74.045
+Epoch 14: | Train Loss: 0.34853 | Val Loss: 0.82946 | Train Acc: 87.782 | Val Acc: 74.554
+Epoch 15: | Train Loss: 0.32378 | Val Loss: 0.84148 | Train Acc: 88.654 | Val Acc: 74.683
+Finished Training
