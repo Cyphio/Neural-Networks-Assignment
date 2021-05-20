@@ -1,0 +1,19 @@
+Beginning training
+C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py:795: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+Traceback (most recent call last):
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 249, in <module>
+    ann.train_model(params, save_model=True, save_path=f"ANN_MODELS/{save_name}",
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 121, in train_model
+    y_train_pred = model(X_train_batch)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "C:/Users/harry/PycharmProjects/Neural-Networks-Assignment/Classifier.py", line 222, in forward
+    return self.fc_out(self.drop_out(x))
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\module.py", line 889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\modules\linear.py", line 94, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "C:\Users\harry\Anaconda3\envs\ML38\lib\site-packages\torch\nn\functional.py", line 1753, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: mat1 dim 1 must match mat2 dim 0
